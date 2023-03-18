@@ -5,8 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ChunkRenderer : MonoBehaviour
 {
-    private const int ChunkWidth = 10;
-    private const int ChunkHeight = 128;
+    public const int ChunkWidth = 10;
+    public const int ChunkHeight = 128;
 
     //Данные о всех блоках
     public int[,,] Blocks = new int[ChunkWidth, ChunkHeight, ChunkWidth];
@@ -22,7 +22,8 @@ public class ChunkRenderer : MonoBehaviour
         //создаем мешь для блока
         Mesh chunkMesh = new Mesh();
 
-        Blocks[0, 0, 0] = 1;
+        Blocks = TerrainGenerator.GenerateTerrain((int)transform.position.x, (int)transform.position.z);
+        
 
         //Проходил циклами по всей чанке по всем 3 координатам
         for (int y = 0; y < ChunkHeight; y++)
@@ -51,16 +52,31 @@ public class ChunkRenderer : MonoBehaviour
 
     private void GenerateBlock(int x, int y, int z)
     {
-        if (Blocks[x, y, z] == 0) return;
-
         var blockPosition = new Vector3Int(x, y, z);
 
-        GenerateRightSide(blockPosition);
-        GenerateLeftSide(blockPosition);
-        GenerateFrontSide(blockPosition);
-        GenerateBacktSide(blockPosition);
-        GenerateTopSide(blockPosition);
-        GenerateBottomSide(blockPosition);
+        if (GetBlockAtPosition(blockPosition) == 0) return;
+
+
+        if (GetBlockAtPosition(blockPosition + Vector3Int.right) == 0) GenerateRightSide(blockPosition);
+        if (GetBlockAtPosition(blockPosition + Vector3Int.left) == 0) GenerateLeftSide(blockPosition);
+        if (GetBlockAtPosition(blockPosition + Vector3Int.forward) == 0) GenerateFrontSide(blockPosition);
+        if (GetBlockAtPosition(blockPosition + Vector3Int.back) == 0) GenerateBacktSide(blockPosition);
+        if (GetBlockAtPosition(blockPosition + Vector3Int.up) == 0) GenerateTopSide(blockPosition);
+        if (GetBlockAtPosition(blockPosition + Vector3Int.down) == 0) GenerateBottomSide(blockPosition);
+    }
+
+    private int GetBlockAtPosition(Vector3Int blockPosition)
+    {
+        if (blockPosition.x >= 0 && blockPosition.x < ChunkWidth &&
+            blockPosition.y >= 0 && blockPosition.y < ChunkHeight &&
+            blockPosition.z >= 0 && blockPosition.z < ChunkWidth)
+        {
+            return Blocks[blockPosition.x, blockPosition.y, blockPosition.z];
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     private void GenerateRightSide(Vector3Int blockPosition)
@@ -122,8 +138,8 @@ public class ChunkRenderer : MonoBehaviour
     {
         //Вершины
         verticies.Add(new Vector3(0, 0, 0) + blockPosition);
-        verticies.Add(new Vector3(0, 0, 1) + blockPosition);
         verticies.Add(new Vector3(1, 0, 0) + blockPosition);
+        verticies.Add(new Vector3(0, 0, 1) + blockPosition);        
         verticies.Add(new Vector3(1, 0, 1) + blockPosition); //2треугольник вершина
 
         AddLastVerticiesSquare();
